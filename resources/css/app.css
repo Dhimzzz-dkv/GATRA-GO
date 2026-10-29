@@ -1,0 +1,428 @@
+@import 'tailwindcss';
+
+@font-face {
+    font-family: 'Inter';
+    src: url('/fonts/InterVariable.ttf') format('truetype');
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('/fonts/InterVariable-Italic.ttf') format('truetype');
+    font-style: italic;
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    --font-sans: Inter, 'Segoe UI', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Noto Sans', sans-serif;
+
+    /* IDDS-aligned semantic tokens. The GATRA-GO purple remains the brand color. */
+    --color-ink: #1f2937;
+    --color-ink-muted: #475467;
+    --color-ink-subtle: #667085;
+    --color-surface: #ffffff;
+    --color-surface-muted: #f8fafc;
+    --color-border: #d0d5dd;
+    --color-border-strong: #98a2b3;
+    --color-control-border: #858e9d;
+    --color-state-success: #067647;
+    --color-state-warning: #b54708;
+    --color-state-danger: #b42318;
+    --color-state-info: #175cd3;
+
+    --spacing-page-gutter: 1.5rem;
+    --spacing-page-block: 1.25rem;
+    --spacing-card: 1.25rem;
+    --spacing-field-gap: 0.75rem;
+
+    --radius-control: 0.5rem;
+    --radius-card: 0.75rem;
+    --radius-dialog: 1rem;
+    --shadow-card: 0 1px 3px rgb(16 24 40 / 0.08), 0 1px 2px rgb(16 24 40 / 0.04);
+    --shadow-popover: 0 12px 24px -8px rgb(16 24 40 / 0.18), 0 4px 8px -4px rgb(16 24 40 / 0.1);
+
+    /* Royal purple palette balanced with light lavender surfaces. */
+    --color-primary-50: #f9f4ff;
+    --color-primary-100: #efe2ff;
+    --color-primary-200: #dcc3f7;
+    --color-primary-300: #c49cec;
+    --color-primary-400: #a777df;
+    --color-primary-500: #9864ce;
+    --color-primary-600: #9055cd;
+    --color-primary-700: #773caf;
+    --color-primary-800: #62318f;
+    --color-primary-900: #4f2774;
+    --color-primary-950: #351951;
+
+    /* Compact corner and shadow scales reduce decorative UI weight. */
+    --radius-xl: 0.625rem;
+    --radius-2xl: 0.75rem;
+    --radius-3xl: 1rem;
+    --shadow-lg: 0 8px 18px -8px rgb(15 23 42 / 0.18), 0 2px 5px -3px rgb(15 23 42 / 0.12);
+    --shadow-xl: 0 12px 24px -12px rgb(15 23 42 / 0.22), 0 4px 8px -5px rgb(15 23 42 / 0.12);
+    --shadow-2xl: 0 18px 36px -18px rgb(15 23 42 / 0.26), 0 8px 12px -8px rgb(15 23 42 / 0.16);
+}
+
+/* Restrained purple gradients for primary actions and active surfaces. */
+.primary-gradient {
+    background-image: linear-gradient(112deg, #9055cd 0%, #773caf 62%, #62318f 100%);
+}
+
+.primary-gradient:hover {
+    background-image: linear-gradient(112deg, #773caf 0%, #62318f 100%);
+}
+
+.primary-gradient-wash {
+    background-image: linear-gradient(112deg, #efe2ff 0%, #f9f4ff 58%, #ffffff 100%);
+}
+
+.primary-gradient-mark {
+    background-image: linear-gradient(135deg, #efe2ff 0%, #dcc3f7 100%);
+}
+
+/* Keep white labels and icons readable on semantic action colors (WCAG AA). */
+:is([class~="bg-emerald-500"], [class~="bg-emerald-600"])[class~="text-white"] {
+    background-color: var(--color-state-success);
+}
+
+:is([class~="hover:bg-emerald-600"], [class~="hover:bg-emerald-700"])[class~="text-white"]:hover {
+    background-color: #05603a;
+}
+
+:is([class~="bg-amber-500"], [class~="bg-amber-600"], [class~="bg-orange-500"])[class~="text-white"] {
+    background-color: var(--color-state-warning);
+}
+
+:is([class~="hover:bg-amber-600"], [class~="hover:bg-amber-700"], [class~="hover:bg-orange-600"])[class~="text-white"]:hover {
+    background-color: #93370d;
+}
+
+[class~="bg-rose-500"][class~="text-white"] {
+    background-color: var(--color-state-danger);
+}
+
+[class~="hover:bg-rose-600"][class~="text-white"]:hover {
+    background-color: #912018;
+}
+
+/* Outcome progress shifts from red through amber to green as completion rises. */
+.progress-indicator {
+    background-color: hsl(var(--progress-hue, 0deg) 72% 32%);
+    transition: width 0.5s ease, background-color 0.5s ease;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #a777df;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #8d52c7;
+}
+
+/* Page transition */
+.page-enter {
+    animation: fadeIn 0.18s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Sidebar transition */
+.sidebar-link {
+    transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+/* Smooth scroll */
+html {
+    scroll-behavior: smooth;
+}
+
+::selection {
+    background: #dcc3f7;
+    color: #351951;
+}
+
+/* Focus-visible accessibility */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[role="button"]:focus-visible,
+[role="menuitem"]:focus-visible,
+[role="tab"]:focus-visible,
+[tabindex]:focus-visible {
+    outline: 3px solid #773caf;
+    outline-offset: 2px;
+}
+
+button[aria-label] {
+    min-inline-size: 2.5rem;
+    min-block-size: 2.5rem;
+}
+
+@media (forced-colors: active) {
+    :focus-visible {
+        outline: 2px solid Highlight;
+        outline-offset: 2px;
+    }
+}
+
+/* Keep native form controls aligned when a page does not set a local style. */
+@layer base {
+    :where(
+        input[type="text"], input[type="email"], input[type="password"], input[type="search"],
+        input[type="tel"], input[type="url"], input[type="number"], input[type="date"],
+        input[type="datetime-local"], input[type="time"], input[type="month"], input[type="week"],
+        select:not([multiple]), textarea
+    ) {
+        box-sizing: border-box;
+        font-family: inherit;
+        color: var(--color-ink);
+        border: 1px solid var(--color-control-border);
+        border-radius: var(--radius-control);
+        background-color: var(--color-surface);
+        padding: 0.625rem 0.75rem;
+        min-height: 2.5rem;
+    }
+
+    :where(input[type="checkbox"], input[type="radio"]) {
+        accent-color: #773caf;
+    }
+
+    :where(input, textarea)::placeholder {
+        color: var(--color-ink-subtle);
+        opacity: 1;
+    }
+}
+
+@layer components {
+    .idds-card {
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-card);
+        background-color: var(--color-surface);
+        box-shadow: var(--shadow-card);
+    }
+
+    .idds-field-label {
+        display: block;
+        color: var(--color-ink-muted);
+        font-size: 0.875rem;
+        font-weight: 600;
+        line-height: 1.25rem;
+    }
+
+    .idds-form-control {
+        box-sizing: border-box;
+        width: auto;
+        max-width: 100%;
+        min-height: 2.5rem;
+        border: 1px solid var(--color-control-border);
+        border-radius: var(--radius-control);
+        background-color: var(--color-surface);
+        padding: 0.625rem 0.75rem;
+        color: var(--color-ink);
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        transition: border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    textarea.idds-form-control {
+        min-height: 6rem;
+        resize: vertical;
+    }
+
+    .idds-form-control::placeholder {
+        color: var(--color-ink-subtle);
+        opacity: 1;
+    }
+
+    .idds-form-control:focus-visible {
+        border-color: #773caf;
+        outline: 3px solid #773caf;
+        outline-offset: 2px;
+    }
+
+    .idds-form-control[aria-invalid="true"] {
+        border-color: var(--color-state-danger);
+    }
+
+    .idds-form-control:disabled {
+        background-color: var(--color-surface-muted);
+        color: var(--color-ink-subtle);
+        cursor: not-allowed;
+    }
+
+    .idds-page-title {
+        color: var(--color-ink);
+        font-size: 1.125rem;
+        font-weight: 650;
+        line-height: 1.5rem;
+    }
+}
+
+/* Use one readable baseline for every explicitly associated form label. */
+label[for] {
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+}
+
+.idds-table-region {
+    overscroll-behavior-inline: contain;
+    scrollbar-gutter: stable;
+}
+
+.idds-table-region:focus-visible {
+    outline: 3px solid #773caf;
+    outline-offset: 2px;
+}
+
+/* Keep search and filter controls aligned consistently across list pages. */
+.idds-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0.625rem;
+}
+
+.idds-filter-bar > :not([type="hidden"]) {
+    flex: 1 1 9rem;
+    min-width: 0;
+}
+
+.idds-filter-bar > .idds-filter-search {
+    flex: 2 1 15rem;
+}
+
+.idds-filter-bar > .idds-filter-date-range {
+    flex: 1.5 1 16rem;
+}
+
+.idds-filter-bar label[for] {
+    display: block;
+    min-height: 2rem;
+    margin-bottom: 0.25rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+}
+
+.idds-filter-bar :is(input:not([type="hidden"]), select) {
+    box-sizing: border-box;
+    min-width: 0;
+    height: 2.5rem;
+}
+
+.idds-filter-bar > .idds-filter-actions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.idds-filter-bar > :is(button, a),
+.idds-filter-bar > .idds-filter-actions > button {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 2.5rem;
+    white-space: nowrap;
+}
+
+.idds-filter-bar > .idds-filter-actions > a {
+    flex: 0 0 auto;
+    min-height: 2.5rem;
+    white-space: nowrap;
+}
+
+.idds-filter-bar > a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 0.75rem;
+}
+
+.skip-link {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 100;
+    transform: translateY(-160%);
+    border-radius: var(--radius-control);
+    background: #351951;
+    padding: 0.75rem 1rem;
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 600;
+    box-shadow: var(--shadow-popover);
+}
+
+.skip-link:focus {
+    transform: translateY(0);
+}
+
+/* Print styles: hide navigation chrome */
+@media print {
+    #sidebar,
+    #sidebar-overlay,
+    header,
+    footer,
+    .no-print {
+        display: none !important;
+    }
+    .lg\:ml-64 {
+        margin-left: 0 !important;
+    }
+    main {
+        padding: 0 !important;
+    }
+}
+
+/* Number input: hide spinner arrows */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+}
