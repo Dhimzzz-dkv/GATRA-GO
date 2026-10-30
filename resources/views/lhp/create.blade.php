@@ -6,9 +6,16 @@
 
 @section('content')
 <div class="max-w-5xl mx-auto pb-28 space-y-6">
+    @php
+        $user = auth()->user();
+        $parentBreadcrumb = $user->isAdminSumber() && ! $user->canManageSpt()
+            ? ['label' => 'LHP', 'href' => route('lhp.index')]
+            : ['label' => 'Pemeriksaan & SPT', 'href' => route('pemeriksaan.index')];
+    @endphp
+
     <x-breadcrumbs :items="[
         ['label' => 'Dashboard', 'href' => route('dashboard')],
-        ['label' => 'Pemeriksaan & SPT', 'href' => route('pemeriksaan.index')],
+        $parentBreadcrumb,
         ['label' => 'Input LHP'],
     ]" />
 

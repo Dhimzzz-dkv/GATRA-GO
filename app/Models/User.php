@@ -13,8 +13,8 @@ use App\Models\Concerns\EnforcesLazyLoading;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role_id', 'pegawai_id', 'opd_id', 'is_active', 'activation_required', 'activated_at'])]
-#[Hidden(['password', 'remember_token'])]
+#[Fillable(['name', 'email', 'password', 'role_id', 'pegawai_id', 'opd_id', 'is_active', 'activation_required', 'activated_at', 'otp_code', 'otp_expires_at'])]
+#[Hidden(['password', 'remember_token', 'otp_code'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -56,6 +56,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
             'activation_required' => 'boolean',
+            'otp_expires_at' => 'datetime',
         ];
     }
 
@@ -194,5 +195,51 @@ class User extends Authenticatable
         }
 
         return 0;
+    }
+
+    /**
+     * Check if user requires two-factor authentication (2FA).
+     */
+    public function requiresTwoFactor(): bool
+    {
+        return $this->isSuperAdmin();
+    }
+
+    /**
+     * Generate a new 6-digit OTP code for 2FA, store its hash, and set expiration (10 minutes).
+     */
+    public function generateTwoFactorOtp(): string
+    {
+        $plainOtp = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        $this->forceFill([
+            'otp_code' => hash('sha256', $plainOtp),
+            'otp_expires_at' => now()->addMinutes(10),
+        ])->save();
+
+        return $plainOtp;
+    }
+
+    /**
+     * Verify the given 2FA OTP code.
+     */
+    public function verifyTwoFactorOtp(string $otp): bool
+    {
+        if (! $this->otp_code || ! $this->otp_expires_at || $this->otp_expires_at->isPast()) {
+            return false;
+        }
+
+        return hash_equals($this->otp_code, hash('sha256', trim($otp)));
+    }
+
+    /**
+     * Clear the 2FA OTP code and expiration.
+     */
+    public function clearTwoFactorOtp(): void
+    {
+        $this->forceFill([
+            'otp_code' => null,
+            'otp_expires_at' => null,
+        ])->save();
     }
 }

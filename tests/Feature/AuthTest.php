@@ -21,18 +21,30 @@ class AuthTest extends TestCase
         $response = $this->get('/login');
 
         $response->assertStatus(200);
-        $response->assertSee('GORONTALO');
+        $response->assertSee('Gorontalo');
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void
+    {
+        $response = $this->post('/login', [
+            'email' => 'admin.inspektorat@inspektorat.go.id',
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect('/dashboard');
+    }
+
+    public function test_super_admin_login_redirects_to_two_factor_verification(): void
     {
         $response = $this->post('/login', [
             'email' => 'superadmin@inspektorat.go.id',
             'password' => 'password',
         ]);
 
-        $this->assertAuthenticated();
-        $response->assertRedirect('/dashboard');
+        $this->assertGuest();
+        $response->assertRedirect(route('2fa.show'));
+        $this->assertTrue(session()->has('auth.2fa.user_id'));
     }
 
     public function test_users_cannot_authenticate_with_invalid_password(): void

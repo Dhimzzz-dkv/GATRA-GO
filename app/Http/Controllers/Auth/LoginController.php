@@ -75,6 +75,40 @@ class LoginController extends Controller
                 ])->onlyInput('email');
             }
 
+            // Check if user requires 2FA (Super Admin)
+            if ($user->requiresTwoFactor()) {
+                $remember = $request->boolean('remember');
+                Auth::logout();
+
+                $otp = $user->generateTwoFactorOtp();
+                $emailFailed = false;
+
+                try {
+                    $user->notify(new \App\Notifications\TwoFactorOtpNotification($otp));
+                } catch (\Throwable $e) {
+                    report($e);
+                    $emailFailed = true;
+                }
+
+                $request->session()->put('auth.2fa.user_id', $user->id);
+                $request->session()->put('auth.2fa.remember', $remember);
+
+                \App\Services\AuditLogger::log(
+                    'LOGIN',
+                    'AUTH',
+                    "Kredensial Super Admin ({$user->email}) terverifikasi. Kode OTP verifikasi 2FA telah " . ($emailFailed ? "gagal dikirim via email (cek pengaturan mail server)." : "dikirimkan ke email."),
+                    null,
+                    null,
+                    $user
+                );
+
+                if ($emailFailed && ! app()->environment('local')) {
+                    return redirect()->route('2fa.show')->with('warning', 'Kode OTP berhasil dibangkitkan, namun email tidak dapat dikirimkan ke server mail. Hubungi administrator untuk memeriksa pengaturan mail.');
+                }
+
+                return redirect()->route('2fa.show')->with('info', 'Kode verifikasi 2FA telah dikirimkan ke email Anda.');
+            }
+
             $request->session()->regenerate();
 
             \App\Services\AuditLogger::log('LOGIN', 'AUTH', 'Pengguna berhasil masuk ke sistem GATRA-GO.', null, null, $user);

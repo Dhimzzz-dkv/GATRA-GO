@@ -1,4 +1,4 @@
-@extends('layouts.app')
+ @extends('layouts.app')
 
 @section('title', 'Rincian Arsip Pemeriksaan: ' . $pemeriksaan->nomor_spt)
 @section('page-title', 'Rincian Data Arsip Pemeriksaan')

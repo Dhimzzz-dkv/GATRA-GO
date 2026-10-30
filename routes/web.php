@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\Auth\AccountActivationController;
 use App\Http\Controllers\Auth\AccountPasswordResetController;
+use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\LhpController;
@@ -47,6 +48,16 @@ Route::get('/atur-ulang-kata-sandi/{token}', [AccountPasswordResetController::cl
 Route::post('/atur-ulang-kata-sandi', [AccountPasswordResetController::class, 'reset'])
     ->middleware('throttle:6,1')
     ->name('password.update');
+
+// Verifikasi Dua Langkah (2FA OTP via Email)
+Route::get('/verifikasi-2fa', [TwoFactorController::class, 'show'])->name('2fa.show');
+Route::post('/verifikasi-2fa', [TwoFactorController::class, 'verify'])
+    ->middleware('throttle:10,1')
+    ->name('2fa.verify');
+Route::post('/verifikasi-2fa/kirim-ulang', [TwoFactorController::class, 'resend'])
+    ->middleware('throttle:3,1')
+    ->name('2fa.resend');
+Route::post('/verifikasi-2fa/batal', [TwoFactorController::class, 'cancel'])->name('2fa.cancel');
 
 // Guest routes
 Route::middleware('guest')->group(function () {

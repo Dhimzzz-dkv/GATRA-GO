@@ -153,7 +153,8 @@ class AuditLogger
         $action = strtoupper($action);
         $ignoreColumns = [
             'created_at', 'updated_at', 'deleted_at', 'remember_token',
-            'password', 'email_verified_at', 'approved_at', 'verified_at'
+            'password', 'email_verified_at', 'approved_at', 'verified_at',
+            'otp_code', 'otp_expires_at'
         ];
 
         $oldValues = null;
