@@ -107,7 +107,7 @@
         </div>
 
         {{-- Add LHP Button --}}
-        <button type="button" id="btn-tambah-lhp" onclick="if (typeof addLhpCard === 'function') { try { addLhpCard(); } catch (e) { console.error('Gagal menambah LHP:', e); alert('Gagal menambah LHP: ' + e.message); } }"
+        <button type="button" id="btn-tambah-lhp" onclick="if (typeof addLhpCard === 'function') { try { addLhpCard(); } catch (e) { console.error('Gagal menambah LHP:', e); window.showAppNotice('Gagal menambah LHP: ' + e.message, { title: 'Gagal menambah LHP', variant: 'danger' }); } }"
                 class="mt-4 w-full rounded-xl border-2 border-dashed border-primary-300 bg-primary-50/50 hover:bg-primary-50 px-4 py-3 text-sm font-bold text-primary-700 transition cursor-pointer">
             + Tambah LHP Lainnya
         </button>
@@ -227,16 +227,21 @@ function removeLhpCard(btn) {
     if (!container) return;
     
     if (container.querySelectorAll('.lhp-card').length <= 1) {
-        alert('Minimal harus ada 1 LHP. Tambahkan LHP baru bila ingin menambah.');
+        window.showAppNotice('Minimal harus ada 1 LHP. Tambahkan LHP baru bila ingin menambah.', { title: 'LHP tidak dapat dihapus', variant: 'warning' });
         return;
     }
     
-    if (confirm('Hapus LHP ini?')) {
+    window.showAppConfirm('Hapus LHP ini?', {
+        title: 'Hapus LHP?',
+        variant: 'danger',
+        acceptLabel: 'Ya, Hapus',
+    }).then((confirmed) => {
+        if (!confirmed) return;
         btn.closest('.lhp-card').remove();
         updateLhpNumbers();
         updateOpdSelections();
         document.dispatchEvent(new CustomEvent('wizardLhpChanged'));
-    }
+    });
 }
 
 function updateLhpNumbers() {

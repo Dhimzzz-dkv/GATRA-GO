@@ -90,14 +90,17 @@
                                 <p class="text-xs text-gray-500">{{ $opd->email ?? '' }}</p>
                             </td>
                             <td class="px-6 py-4 text-center">
-                                <form method="POST" action="{{ route('opd.toggle-status', $opd) }}" class="inline">
+                                <form method="POST" action="{{ route('opd.toggle-status', $opd) }}" class="inline"
+                                      data-confirm-title="Ubah status OPD?"
+                                      data-confirm-message="{{ $opd->is_active
+                                          ? 'Nonaktifkan OPD ' . $opd->nama . '? OPD ini tidak akan muncul pada pilihan target pemeriksaan.'
+                                          : 'Aktifkan kembali OPD ' . $opd->nama . '?' }}"
+                                      data-confirm-variant="warning"
+                                      data-confirm-accept="{{ $opd->is_active ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan' }}">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" title="Klik untuk mengubah status"
                                             data-loading-text="Mengubah..."
-                                            onclick="return confirm('{{ $opd->is_active
-                                                ? 'Nonaktifkan OPD ' . addslashes($opd->nama) . '? OPD ini tidak akan muncul pada pilihan target pemeriksaan.'
-                                                : 'Aktifkan kembali OPD ' . addslashes($opd->nama) . '?' }}');"
                                             class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition {{ $opd->is_active ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-rose-100 text-rose-700 hover:bg-rose-200' }}">
                                         <span class="h-1.5 w-1.5 rounded-full {{ $opd->is_active ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
                                         {{ $opd->is_active ? 'Aktif' : 'Nonaktif' }}
@@ -119,8 +122,11 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
                                     </a>
-                                    <form method="POST" action="{{ route('opd.destroy', $opd) }}"
-                                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus OPD {{ $opd->nama }}?');" class="inline">
+                                    <form method="POST" action="{{ route('opd.destroy', $opd) }}" class="inline"
+                                          data-confirm-title="Hapus OPD?"
+                                          data-confirm-message="{{ 'Apakah Anda yakin ingin menghapus OPD ' . $opd->nama . '?' }}"
+                                          data-confirm-variant="danger"
+                                          data-confirm-accept="Ya, Hapus">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" title="Hapus OPD"

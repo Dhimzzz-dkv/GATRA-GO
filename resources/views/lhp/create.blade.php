@@ -931,11 +931,16 @@
 
         const allCards = container.querySelectorAll('.lhp-card');
         if (allCards.length <= 1) {
-            alert('Minimal harus ada 1 dokumen LHP.');
+            window.showAppNotice('Minimal harus ada 1 dokumen LHP.', { title: 'LHP tidak dapat dihapus', variant: 'warning' });
             return;
         }
 
-        if (confirm('Apakah Anda yakin ingin menghapus LHP ini?')) {
+        window.showAppConfirm('Apakah Anda yakin ingin menghapus LHP ini?', {
+            title: 'Hapus LHP?',
+            variant: 'danger',
+            acceptLabel: 'Ya, Hapus',
+        }).then((confirmed) => {
+            if (!confirmed) return;
             const cardIndex = Array.from(allCards).indexOf(card);
             card.remove();
             updateLhpIndices();
@@ -944,7 +949,7 @@
 
             const remainingCards = Array.from(container.querySelectorAll('.lhp-card'));
             window.focusFirstDynamicField(remainingCards[Math.min(cardIndex, remainingCards.length - 1)]);
-        }
+        });
     }
 
     function updateLhpIndices() {
@@ -1073,7 +1078,7 @@
         if (!card || !item || !list) return;
 
         if (list.querySelectorAll(config.item).length <= 1) {
-            alert(config.minimumMessage);
+            window.showAppNotice(config.minimumMessage, { title: 'Butir minimal harus tersedia', variant: 'warning' });
             return;
         }
 
@@ -1222,11 +1227,16 @@
 
         const allCards = container.querySelectorAll('.tl-card');
         if (allCards.length <= 1) {
-            alert('Minimal harus ada 1 form Tindak Lanjut.');
+            window.showAppNotice('Minimal harus ada 1 form Tindak Lanjut.', { title: 'Tindak lanjut tidak dapat dihapus', variant: 'warning' });
             return;
         }
 
-        if (confirm('Apakah Anda yakin ingin menghapus kartu Tindak Lanjut ini?')) {
+        window.showAppConfirm('Apakah Anda yakin ingin menghapus kartu Tindak Lanjut ini?', {
+            title: 'Hapus tindak lanjut?',
+            variant: 'danger',
+            acceptLabel: 'Ya, Hapus',
+        }).then((confirmed) => {
+            if (!confirmed) return;
             const cardIndex = Array.from(allCards).indexOf(card);
             card.remove();
             updateTindakLanjutIndices();
@@ -1234,7 +1244,7 @@
 
             const remainingCards = Array.from(container.querySelectorAll('.tl-card'));
             window.focusFirstDynamicField(remainingCards[Math.min(cardIndex, remainingCards.length - 1)]);
-        }
+        });
     }
 
     function updateTindakLanjutIndices() {

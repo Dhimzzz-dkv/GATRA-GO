@@ -971,7 +971,7 @@
         if (list && box) {
             const count = list.querySelectorAll('.adm-item-box').length;
             if (count <= 1) {
-                alert('Minimal satu temuan administrasi harus diisi jika unsur administrasi dipilih.');
+                window.showAppNotice('Minimal satu temuan administrasi harus diisi jika unsur administrasi dipilih.', { title: 'Temuan administrasi diperlukan', variant: 'warning' });
                 return;
             }
             box.remove();
@@ -1057,7 +1057,7 @@
         if (list && box) {
             const count = list.querySelectorAll('.kg-item-box').length;
             if (count <= 1) {
-                alert('Minimal satu temuan kerugian harus diisi jika unsur kerugian dipilih.');
+                window.showAppNotice('Minimal satu temuan kerugian harus diisi jika unsur kerugian dipilih.', { title: 'Temuan kerugian diperlukan', variant: 'warning' });
                 return;
             }
             box.remove();
@@ -1114,13 +1114,18 @@
         if (card && container) {
             const count = container.querySelectorAll('.lhp-card').length;
             if (count <= 1) {
-                alert('SPT harus memiliki minimal satu LHP.');
+                window.showAppNotice('SPT harus memiliki minimal satu LHP.', { title: 'LHP tidak dapat dihapus', variant: 'warning' });
                 return;
             }
-            if (confirm('Hapus kartu LHP ini?')) {
+            window.showAppConfirm('Hapus kartu LHP ini?', {
+                title: 'Hapus LHP?',
+                variant: 'danger',
+                acceptLabel: 'Ya, Hapus',
+            }).then((confirmed) => {
+                if (!confirmed) return;
                 card.remove();
                 updateLhpCardLabels();
-            }
+            });
         }
     }
 
@@ -1182,7 +1187,7 @@
         if (container && row) {
             const count = container.querySelectorAll('.tim-member-row').length;
             if (count <= 1) {
-                alert('Tim Pemeriksa minimal memiliki satu anggota.');
+                window.showAppNotice('Tim Pemeriksa minimal memiliki satu anggota.', { title: 'Susunan tim belum lengkap', variant: 'warning' });
                 return;
             }
             row.remove();

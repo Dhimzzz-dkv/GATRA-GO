@@ -360,8 +360,11 @@
                                                 </svg>
                                             </a>
 
-                                            <form method="POST" action="{{ route('pemeriksaan.destroy', $p) }}"
-                                                  onsubmit="return confirm('Apakah Anda yakin ingin menghapus data pemeriksaan ini?');" class="inline">
+                                            <form method="POST" action="{{ route('pemeriksaan.destroy', $p) }}" class="inline"
+                                                  data-confirm-title="Hapus pemeriksaan?"
+                                                  data-confirm-message="Apakah Anda yakin ingin menghapus data pemeriksaan ini?"
+                                                  data-confirm-variant="danger"
+                                                  data-confirm-accept="Ya, Hapus">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" title="Hapus Pemeriksaan"
@@ -376,8 +379,11 @@
 
                                     {{-- Tombol Arsipkan Laporan (hanya muncul jika semua temuan selesai) --}}
                                     @if((auth()->user()->isAdminSumber() || auth()->user()->isSuperAdmin()) && $p->isFullyResolved())
-                                        <form method="POST" action="{{ route('pemeriksaan.archive', $p) }}"
-                                              onsubmit="return confirm('Arsipkan laporan ini?\n\nLaporan akan dihapus dari daftar aktif, tetapi data temuan dan tindak lanjut tetap tersimpan di Laporan Rekapan.\n\nLanjutkan?');" class="inline">
+                                        <form method="POST" action="{{ route('pemeriksaan.archive', $p) }}" class="inline"
+                                              data-confirm-title="Arsipkan laporan?"
+                                              data-confirm-message="Laporan akan dihapus dari daftar aktif, tetapi data temuan dan tindak lanjut tetap tersimpan di Laporan Rekapan."
+                                              data-confirm-variant="warning"
+                                              data-confirm-accept="Ya, Arsipkan">
                                             @csrf
                                             <button type="submit" title="Arsipkan Laporan (Selesai)"
                                                     class="rounded-lg p-1.5 text-state-warning hover:bg-amber-50 transition">

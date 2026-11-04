@@ -37,10 +37,13 @@
 
             {{-- Tombol Arsipkan Laporan (hanya muncul jika semua temuan selesai) --}}
             @if((auth()->user()->isAdminSumber() || auth()->user()->isSuperAdmin()) && $pemeriksaan->isFullyResolved())
-                <form method="POST" action="{{ route('pemeriksaan.archive', $pemeriksaan) }}" class="inline">
+                <form method="POST" action="{{ route('pemeriksaan.archive', $pemeriksaan) }}" class="inline"
+                      data-confirm-title="Arsipkan laporan?"
+                      data-confirm-message="Laporan akan dihapus dari daftar aktif, tetapi data temuan dan tindak lanjut tetap tersimpan di Laporan Rekapan."
+                      data-confirm-variant="warning"
+                      data-confirm-accept="Ya, Arsipkan">
                     @csrf
                     <button type="submit"
-                            onclick="return confirm('Arsipkan laporan ini?\n\nLaporan akan dihapus dari daftar aktif, tetapi data temuan dan tindak lanjut tetap tersimpan di Laporan Rekapan.\n\nLanjutkan?');"
                             class="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-600 transition cursor-pointer">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
@@ -470,8 +473,11 @@
                         </span>
 
                         @if(!auth()->user()->isPemantau() && !auth()->user()->isOpd() && $tim->peran_tim !== 'Penanggung Jawab')
-                            <form method="POST" action="{{ route('pemeriksaan.tim.destroy', [$pemeriksaan, $tim]) }}"
-                                  onsubmit="return confirm('Hapus {{ $tim->pegawai->nama }} dari susunan tim?');" class="inline">
+                            <form method="POST" action="{{ route('pemeriksaan.tim.destroy', [$pemeriksaan, $tim]) }}" class="inline"
+                                  data-confirm-title="Hapus anggota tim?"
+                                  data-confirm-message="{{ 'Hapus ' . $tim->pegawai->nama . ' dari susunan tim?' }}"
+                                  data-confirm-variant="danger"
+                                  data-confirm-accept="Ya, Hapus">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="rounded-lg p-1.5 text-gray-500 hover:text-state-danger hover:bg-red-50 transition cursor-pointer" title="Hapus Anggota">
@@ -504,7 +510,7 @@
                     </svg>
                     Laporan Hasil Pemeriksaan (LHP) ({{ $pemeriksaan->lhps->count() }})
                 </h3>
-                <p class="text-xs text-gray-500 font-medium">1 SPT dapat menaungi banyak LHP dengan target multi-OPD dan daftar temuan masing-masing</p>
+                <p class="text-xs text-gray-500 font-medium">Setiap LHP memuat target OPD dan temuan terkait.</p>
             </div>
         </div>
 
@@ -545,84 +551,41 @@
                             @endforelse
                         </div>
 
-                        <div class="flex flex-wrap items-center gap-2 pt-1" aria-label="Ringkasan jumlah temuan">
-                            <span class="inline-flex items-center rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-semibold text-gray-700">
-                                {{ $temuansInLhp->count() }} Temuan
-                            </span>
-                            <span class="inline-flex items-center rounded-lg border border-primary-200 bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-800">
-                                {{ $administrasiCount }} Administrasi
-                            </span>
-                            <span class="inline-flex items-center rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">
-                                {{ $kerugianCount }} Kerugian
-                            </span>
-                        </div>
-
-                        @if($lhp->ringkasan)
-                            <div class="mt-2 rounded-xl border border-gray-100 bg-gray-50 p-3.5">
-                                <p class="mb-1 text-xs font-bold  tracking-wider text-gray-500">Ringkasan LHP</p>
-                                <p class="text-sm leading-relaxed text-gray-700 whitespace-pre-line">{{ $lhp->ringkasan }}</p>
-                            </div>
-                        @endif
-
-                        {{-- Ringkasan Temuan Kerugian pada LHP Ini --}}
                         @php
                             $lhpKerugianTemuans = $temuansInLhp->where('ada_unsur_kerugian', true);
                             $totalLhpKerugian = $lhpKerugianTemuans->sum('nilai_kerugian');
                             $internalCount = $lhpKerugianTemuans->where('jenis_kerugian', 'Internal')->count();
                             $eksternalCount = $lhpKerugianTemuans->where('jenis_kerugian', 'Eksternal')->count();
                         @endphp
-                        @if($lhpKerugianTemuans->isNotEmpty())
-                            <div class="rounded-xl border border-amber-200 bg-amber-50 p-3.5 mt-3 flex flex-wrap items-center justify-between gap-3">
-                                <div class="flex items-center gap-2.5 text-xs">
-                                    <span class="px-2.5 py-1 rounded-lg bg-amber-600 text-white font-bold text-xs  tracking-wider shadow-2xs">
-                                        Temuan Kerugian
-                                    </span>
-                                    <div>
-                                        <span class="text-xs font-bold text-gray-500 block ">Total Nilai Kerugian LHP Ini</span>
-                                        <span class="font-bold text-amber-950 text-sm">
-                                            Rp {{ number_format($totalLhpKerugian, 0, ',', '.') }}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="flex flex-wrap items-center gap-2 text-xs">
-                                    @if($internalCount > 0)
-                                        <span class="inline-flex items-center gap-1.5 rounded-xl bg-primary-100/90 text-primary-900 px-3 py-1 text-xs font-bold border border-primary-200 shadow-2xs" title="Kerugian yang ditemukan di dalam kantor / OPD">
-                                            Internal: {{ $internalCount }} temuan
-                                        </span>
-                                    @endif
-                                    @if($eksternalCount > 0)
-                                        <span class="inline-flex items-center gap-1.5 rounded-xl bg-amber-100/90 text-amber-900 px-3 py-1 text-xs font-bold border border-amber-200 shadow-2xs" title="Kerugian yang ditemukan pada pihak ketiga">
-                                            Eksternal: {{ $eksternalCount }} temuan
-                                        </span>
-                                    @endif
-                                </div>
+
+                        @if($lhp->ringkasan)
+                            <div class="mt-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                                <p class="mb-1 text-xs font-semibold text-gray-500">Ringkasan LHP</p>
+                                <p class="text-sm leading-relaxed text-gray-700 whitespace-pre-line">{{ $lhp->ringkasan }}</p>
                             </div>
                         @endif
 
-                        @if($lhpAdministrasiTemuans->isNotEmpty())
-                            <div class="rounded-xl border border-blue-200 bg-blue-50 p-3.5 mt-3 space-y-3">
-                                <div class="flex flex-wrap items-center justify-between gap-3">
-                                    <div class="flex items-center gap-2.5 text-xs">
-                                        <span class="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold text-xs  tracking-wider shadow-2xs">
-                                            Temuan Administrasi
-                                        </span>
-                                        <div>
-                                            <span class="text-xs font-bold text-gray-500 block ">Jumlah Temuan Administrasi LHP Ini</span>
-                                            <span class="font-bold text-blue-950 text-sm">{{ $administrasiCount }} temuan</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="space-y-2 border-t border-blue-200 pt-2.5">
-                                    <span class="text-xs font-bold text-blue-900 block  tracking-wider">Keterangan Temuan Administrasi</span>
-                                    @foreach($lhpAdministrasiTemuans as $administrasiTemuan)
-                                        <div class="text-xs text-blue-950 leading-relaxed {{ !$loop->last ? 'border-b border-blue-100 pb-2' : '' }}">
-                                            <p class="font-semibold">{{ $administrasiTemuan->judul_temuan ?: 'Temuan Administrasi #' . $loop->iteration }}</p>
-                                            <p class="mt-0.5 whitespace-pre-line">{{ $administrasiTemuan->uraian_administrasi ?: $administrasiTemuan->uraian_temuan ?: '-' }}</p>
-                                        </div>
-                                    @endforeach
-                                </div>
+                        <dl class="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-gray-200 bg-gray-200 sm:grid-cols-4" aria-label="Ringkasan temuan LHP">
+                            <div class="bg-white px-3.5 py-3">
+                                <dt class="text-xs font-medium text-gray-500">Total Temuan</dt>
+                                <dd class="mt-1 text-sm font-semibold text-gray-900">{{ $temuansInLhp->count() }}</dd>
                             </div>
-                        @endif
+                            <div class="bg-white px-3.5 py-3">
+                                <dt class="text-xs font-medium text-gray-500">Administrasi</dt>
+                                <dd class="mt-1 text-sm font-semibold text-primary-800">{{ $administrasiCount }}</dd>
+                            </div>
+                            <div class="bg-white px-3.5 py-3">
+                                <dt class="text-xs font-medium text-gray-500">Kerugian</dt>
+                                <dd class="mt-1 text-sm font-semibold text-amber-800">{{ $kerugianCount }}</dd>
+                            </div>
+                            @if($lhpKerugianTemuans->isNotEmpty())
+                                <div class="bg-white px-3.5 py-3">
+                                    <dt class="text-xs font-medium text-gray-500">Total Nilai Kerugian</dt>
+                                    <dd class="mt-1 text-sm font-semibold text-gray-900">Rp {{ number_format($totalLhpKerugian, 0, ',', '.') }}</dd>
+                                    <dd class="mt-0.5 text-xs text-gray-500">Internal {{ $internalCount }} · Eksternal {{ $eksternalCount }}</dd>
+                                </div>
+                            @endif
+                        </dl>
                     </div>
 
                     {{-- Actions & Status LHP --}}
@@ -653,8 +616,11 @@
                             @endif
 
                             @if(!auth()->user()->isPemantau() && !auth()->user()->isOpd())
-                                <form method="POST" action="{{ route('pemeriksaan.lhp.destroy', [$pemeriksaan, $lhp]) }}"
-                                      onsubmit="return confirm('Hapus LHP {{ $lhp->nomor_lhp }} beserta seluruh temuannya?');" class="inline">
+                                <form method="POST" action="{{ route('pemeriksaan.lhp.destroy', [$pemeriksaan, $lhp]) }}" class="inline"
+                                      data-confirm-title="Hapus LHP?"
+                                      data-confirm-message="{{ 'Hapus LHP ' . $lhp->nomor_lhp . ' beserta seluruh temuannya?' }}"
+                                      data-confirm-variant="danger"
+                                      data-confirm-accept="Ya, Hapus">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="p-1.5 rounded-xl text-gray-500 hover:text-state-danger hover:bg-red-50 transition cursor-pointer" title="Hapus LHP">
@@ -691,31 +657,20 @@
                             $isKerugian = $temuan->ada_unsur_kerugian;
                             $tStatusBadge = $temuan->status_penyelesaian_badge;
                         @endphp
-                        <div class="rounded-2xl border {{ $isKerugian ? 'border-amber-200/90 bg-amber-50/20' : 'border-primary-200/90 bg-primary-50/20' }} p-5 space-y-4 transition hover:bg-white">
+                        <div class="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
                             {{-- Header Temuan Card --}}
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b {{ $isKerugian ? 'border-amber-200/60' : 'border-primary-200/60' }} pb-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 pb-3">
                                 <div class="flex flex-wrap items-center gap-2">
-                                    <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold {{ $isKerugian ? 'bg-amber-600 text-white' : 'bg-primary-600 text-white' }}">
-                                        {{ $isKerugian ? 'Temuan Kerugian Daerah' : 'Temuan Administrasi #' . ($tIdx + 1) }}
+                                    <span class="rounded-md border px-2 py-1 text-xs font-semibold {{ $isKerugian ? 'border-amber-200 bg-amber-50 text-amber-800' : 'border-primary-200 bg-primary-50 text-primary-800' }}">
+                                        {{ $isKerugian ? 'Temuan Kerugian' : 'Temuan Administrasi #' . ($tIdx + 1) }}
                                     </span>
                                     @if($isKerugian)
-                                        @if($temuan->kategori_kerugian)
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold border {{ $temuan->kategori_kerugian === 'Kerugian Negara' ? 'bg-primary-100 text-primary-700 border-primary-200' : 'bg-teal-100 text-teal-700 border-teal-200' }}">
-                                                {{ $temuan->kategori_kerugian }}
-                                            </span>
-                                        @endif
                                         @php $kgInfo = $temuan->jenis_kerugian_info; @endphp
-                                        @if($temuan->jenis_kerugian)
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold border {{ $kgInfo['badge_class'] ?? 'bg-amber-100 text-amber-800 border-amber-200' }}" title="{{ $kgInfo['keterangan'] ?? '' }}">
-                                                {{ $kgInfo['label'] }}
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold border bg-rose-100 text-rose-800 border-rose-300" title="Sub kategori belum ditentukan (Internal atau Eksternal)">
-                                                Belum Dikategorikan
-                                            </span>
-                                        @endif
+                                        <span class="text-xs text-gray-600">
+                                            {{ $temuan->kategori_kerugian ?: 'Kategori belum ditentukan' }}
+                                        </span>
                                     @endif
-                                    <h6 class="text-xs font-bold text-gray-900">{{ $temuan->judul_temuan }}</h6>
+                                    <h6 class="min-w-0 break-words text-xs font-semibold text-gray-900">{{ $temuan->judul_temuan }}</h6>
                                 </div>
 
                                 <div class="flex items-center gap-2">
@@ -752,48 +707,47 @@
                                     <span class="text-xs font-bold text-gray-500  tracking-wider block">Uraian Temuan</span>
                                     <p class="text-sm text-gray-800 leading-relaxed whitespace-pre-line">{{ $temuan->uraian_temuan ?: '-' }}</p>
                                 </div>
-                                <div class="bg-primary-50/50 p-3.5 rounded-xl border border-primary-200/60 space-y-1">
-                                    <span class="text-xs font-bold text-primary-700  tracking-wider block">Rekomendasi yang Diberikan</span>
-                                    <p class="text-sm text-primary-900 leading-relaxed whitespace-pre-line font-medium">{{ $temuan->rekomendasi ?: '-' }}</p>
+                                <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200 space-y-1">
+                                    <span class="text-xs font-bold text-gray-500 tracking-wider block">Rekomendasi yang Diberikan</span>
+                                    <p class="text-sm text-gray-800 leading-relaxed whitespace-pre-line">{{ $temuan->rekomendasi ?: '-' }}</p>
                                 </div>
                             </div>
+
+                            @if($temuan->ada_unsur_administrasi && $temuan->uraian_administrasi && $temuan->uraian_administrasi !== $temuan->uraian_temuan)
+                                <div class="rounded-xl border border-gray-200 bg-white px-3.5 py-3 space-y-1">
+                                    <span class="text-xs font-semibold text-gray-500">Rincian Administrasi</span>
+                                    <p class="text-sm leading-relaxed text-gray-800 whitespace-pre-line">{{ $temuan->uraian_administrasi }}</p>
+                                </div>
+                            @endif
 
                             {{-- Penjelasan Keterangan Sub Kategori Kerugian --}}
                             @if($isKerugian)
                                 @php $kgInfo = $temuan->jenis_kerugian_info; @endphp
-                                <div class="rounded-xl border {{ ($temuan->jenis_kerugian === 'Internal') ? 'border-primary-200 bg-primary-50/70' : (($temuan->jenis_kerugian === 'Eksternal') ? 'border-amber-200 bg-amber-50/70' : 'border-gray-200 bg-gray-50') }} p-3.5 text-xs">
+                                <div class="rounded-xl border border-gray-200 bg-gray-50 p-3.5 text-xs">
                                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                                         <div class="flex items-start gap-2.5">
                                             <div>
                                                 <div class="flex items-center gap-2">
-                                                    <span class="text-xs font-bold  tracking-wider text-gray-500">Sub Kategori Kerugian:</span>
-                                                    <span class="font-extrabold text-gray-900 text-xs">{{ $kgInfo['label'] ?? ($temuan->jenis_kerugian ?: 'Kerugian Daerah') }}</span>
+                                                    <span class="text-xs font-semibold text-gray-600">Subkategori kerugian</span>
+                                                    <span class="font-semibold text-gray-900 text-xs">{{ $kgInfo['label'] ?? ($temuan->jenis_kerugian ?: 'Belum ditentukan') }}</span>
                                                 </div>
                                                 <p class="text-xs text-gray-600 mt-0.5">
                                                     {{ $kgInfo['keterangan'] ?? 'Temuan kerugian finansial daerah/negara.' }}
                                                 </p>
                                             </div>
                                         </div>
-                                        <div class="flex items-center gap-1.5 self-start sm:self-auto flex-shrink-0">
-                                            @if($temuan->jenis_kerugian === 'Internal')
-                                                <span class="px-2.5 py-1 rounded-lg bg-primary-100 border border-primary-300 text-primary-900 font-bold text-xs flex items-center gap-1 shadow-2xs">
-                                                    Temuan di Lingkungan Kantor / OPD
-                                                </span>
-                                            @elseif($temuan->jenis_kerugian === 'Eksternal')
-                                                <span class="px-2.5 py-1 rounded-lg bg-amber-100 border border-amber-300 text-amber-900 font-bold text-xs flex items-center gap-1 shadow-2xs">
-                                                    Temuan pada Pihak Ketiga / Rekanan
-                                                </span>
-                                            @else
+                                        @if(!$temuan->jenis_kerugian)
+                                            <div class="flex items-center gap-1.5 self-start sm:self-auto flex-shrink-0">
                                                 <div class="flex flex-wrap items-center gap-1.5">
-                                                    <span class="px-2.5 py-1 rounded-lg bg-rose-100 border border-rose-300 text-rose-900 font-bold text-xs flex items-center gap-1 shadow-2xs">
-                                                        Belum Ditentukan
+                                                    <span class="text-xs text-amber-800">
+                                                        Klasifikasi perlu ditentukan
                                                     </span>
                                                     @if(!auth()->user()->isPemantau() && !auth()->user()->isOpd() && (auth()->user()->isSuperAdmin() || auth()->user()->getSumberPemeriksaan() === $temuan->sumber_pemeriksaan))
                                                         <form method="POST" action="{{ route('temuan.update-jenis-kerugian', $temuan) }}" class="inline-flex items-center">
                                                             @csrf
                                                             @method('PATCH')
                                                             <input type="hidden" name="jenis_kerugian" value="Internal">
-                                                            <button type="submit" class="px-2.5 py-1 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold transition shadow-xs cursor-pointer" title="Tetapkan sebagai Kerugian Internal (di dalam kantor/OPD)">
+                                                            <button type="submit" class="rounded-lg border border-primary-200 bg-white px-2.5 py-1 text-xs font-semibold text-primary-700 transition hover:bg-primary-50 cursor-pointer" title="Tetapkan sebagai Kerugian Internal (di dalam kantor/OPD)">
                                                                 Set Internal
                                                             </button>
                                                         </form>
@@ -801,46 +755,40 @@
                                                             @csrf
                                                             @method('PATCH')
                                                             <input type="hidden" name="jenis_kerugian" value="Eksternal">
-                                                            <button type="submit" class="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-xs cursor-pointer" title="Tetapkan sebagai Kerugian Eksternal (pihak ketiga/rekanan)">
+                                                            <button type="submit" class="rounded-lg border border-primary-200 bg-white px-2.5 py-1 text-xs font-semibold text-primary-700 transition hover:bg-primary-50 cursor-pointer" title="Tetapkan sebagai Kerugian Eksternal (pihak ketiga/rekanan)">
                                                                 Set Eksternal
                                                             </button>
                                                         </form>
                                                     @endif
                                                 </div>
-                                            @endif
-                                        </div>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             @endif
 
                             {{-- Progress Finansial (Khusus Temuan Kerugian) --}}
                             @if($isKerugian && $temuan->nilai_kerugian > 0)
-                                <div class="p-3.5 rounded-xl bg-white border border-amber-200 space-y-2.5">
+                                <div class="p-3.5 rounded-xl bg-white border border-gray-200 space-y-2.5">
                                     <div class="flex items-center justify-between text-xs font-bold">
-                                        <span class="text-amber-900">Progress Penyetoran Temuan Kerugian Ini</span>
-                                        <span class="text-emerald-700 font-bold">{{ $temuan->progress_persen }}% Terpenuhi</span>
+                                        <span class="text-gray-600">Progress penyetoran</span>
+                                        <span class="text-gray-900 font-semibold">{{ $temuan->progress_persen }}% terpenuhi</span>
                                     </div>
                                     <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden border border-gray-200 p-0.5" role="progressbar" aria-label="Progress penyetoran untuk {{ $temuan->judul_temuan }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $temuan->progress_persen }}">
                                         <x-progress-indicator :value="$temuan->progress_persen" />
                                     </div>
-                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
+                                    <div class="grid grid-cols-1 gap-2 border-t border-gray-100 pt-2 sm:grid-cols-3 text-xs">
                                         <div>
-                                            <span class="text-gray-500 block text-xs font-bold ">Kategori Kerugian</span>
-                                            <span class="font-bold {{ $temuan->jenis_kerugian === 'Internal' ? 'text-primary-800' : ($temuan->jenis_kerugian === 'Eksternal' ? 'text-amber-800' : 'text-rose-700') }}">
-                                                {{ $temuan->jenis_kerugian ?: 'Belum Dikategorikan' }}
-                                            </span>
+                                            <span class="block text-xs text-gray-500">Nilai kerugian</span>
+                                            <span class="font-semibold text-gray-900">{{ $temuan->formatted_nilai_kerugian }}</span>
                                         </div>
                                         <div>
-                                            <span class="text-gray-500 block text-xs font-bold ">Nilai Kerugian</span>
-                                            <span class="font-bold text-gray-900">{{ $temuan->formatted_nilai_kerugian }}</span>
+                                            <span class="block text-xs text-gray-500">Disetor terverifikasi</span>
+                                            <span class="font-semibold text-gray-900">{{ $temuan->formatted_total_disetor }}</span>
                                         </div>
                                         <div>
-                                            <span class="text-emerald-700 block text-xs font-bold ">Disetor Terverifikasi</span>
-                                            <span class="font-bold text-emerald-700">{{ $temuan->formatted_total_disetor }}</span>
-                                        </div>
-                                        <div>
-                                            <span class="text-rose-700 block text-xs font-bold ">Sisa Kewajiban</span>
-                                            <span class="font-bold text-rose-700">{{ $temuan->formatted_sisa_kerugian }}</span>
+                                            <span class="block text-xs text-gray-500">Sisa kewajiban</span>
+                                            <span class="font-semibold {{ (float) $temuan->sisa_kerugian > 0 ? 'text-rose-700' : 'text-gray-900' }}">{{ $temuan->formatted_sisa_kerugian }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -848,7 +796,7 @@
 
                             {{-- Riwayat Tindak Lanjut Temuan Ini --}}
                             @if($temuan->tindakLanjuts->isNotEmpty())
-                                <div class="pt-2 border-t {{ $isKerugian ? 'border-amber-200/50' : 'border-primary-200/50' }} space-y-2">
+                                <div class="pt-2 border-t border-gray-200 space-y-2">
                                     <span class="text-xs font-bold text-gray-500  tracking-wider block">
                                         Riwayat Tindak Lanjut Temuan ({{ $temuan->tindakLanjuts->count() }})
                                     </span>
@@ -860,15 +808,18 @@
                                                         TL #{{ $temuan->tindakLanjuts->count() - $tlIdx }} • Tgl: {{ $tl->tanggal_tindak_lanjut ? $tl->tanggal_tindak_lanjut->format('d/m/Y') : '-' }} ({{ $tl->creator->name ?? 'User' }})
                                                     </span>
                                                     <div class="flex items-center gap-1.5">
-                                                        @if($tl->status_verifikasi === 'SESUAI')
-                                                            <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Sesuai</span>
-                                                        @elseif($tl->status_verifikasi === 'BELUM SESUAI')
-                                                            <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">Belum Sesuai</span>
-                                                        @elseif($tl->status_verifikasi === 'TIDAK DAPAT DITINDAKLANJUTI DENGAN ALASAN YANG SAH')
-                                                            <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800">Tidak Dapat TL</span>
-                                                        @else
-                                                            <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">Menunggu Verifikasi</span>
-                                                        @endif
+                                                        @php
+                                                            $verificationStatus = match($tl->status_verifikasi) {
+                                                                'SESUAI' => ['label' => 'Sesuai', 'dot' => 'bg-emerald-600'],
+                                                                'BELUM SESUAI' => ['label' => 'Belum Sesuai', 'dot' => 'bg-amber-600'],
+                                                                'TIDAK DAPAT DITINDAKLANJUTI DENGAN ALASAN YANG SAH' => ['label' => 'Tidak Dapat TL', 'dot' => 'bg-gray-500'],
+                                                                default => ['label' => 'Menunggu Verifikasi', 'dot' => 'bg-blue-600'],
+                                                            };
+                                                        @endphp
+                                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+                                                            <span class="h-1.5 w-1.5 rounded-full {{ $verificationStatus['dot'] }}" aria-hidden="true"></span>
+                                                            {{ $verificationStatus['label'] }}
+                                                        </span>
 
                                                         @if(auth()->user()->isSuperAdmin())
                                                             <button type="button"
@@ -883,10 +834,10 @@
                                                 <p class="text-gray-700 leading-relaxed">{{ $tl->uraian_tindak_lanjut }}</p>
 
                                                 @if($tl->jumlah_setor > 0 || $tl->nomor_bukti_setor)
-                                                    <div class="p-2 rounded-lg bg-emerald-50 text-xs text-emerald-900 font-medium flex flex-wrap gap-3">
-                                                        <span>Setoran: <strong>{{ $tl->formatted_jumlah_setor }}</strong></span>
+                                                    <div class="p-2 rounded-lg border border-gray-200 bg-gray-50 text-xs text-gray-700 flex flex-wrap gap-3">
+                                                        <span>Setoran: <strong class="font-semibold text-gray-900">{{ $tl->formatted_jumlah_setor }}</strong></span>
                                                         @if($tl->nomor_bukti_setor)
-                                                            <span>No. STS: <strong>{{ $tl->nomor_bukti_setor }}</strong></span>
+                                                            <span>No. STS: <strong class="font-semibold text-gray-900">{{ $tl->nomor_bukti_setor }}</strong></span>
                                                         @endif
                                                     </div>
                                                 @endif

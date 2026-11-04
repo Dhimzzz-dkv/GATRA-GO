@@ -32,15 +32,8 @@
                 <div>
                     <label for="unit_bidang" class="mb-1.5 block text-sm font-medium text-gray-700">Unit / Irban / Bidang <span class="text-state-danger">*</span></label>
                     <input type="text" id="unit_bidang" name="unit_bidang" value="{{ old('unit_bidang', $pegawai->unit_bidang) }}" required
-                           list="unit_list"
+                           data-suggestions='["Sekretariat","Irban Wilayah I","Irban Wilayah II","Irban Wilayah III","Irban Khusus / Investigasi"]'
                            class="w-full border bg-white px-4 py-2.5 text-sm text-gray-800 idds-form-control">
-                    <datalist id="unit_list">
-                        <option value="Sekretariat">
-                        <option value="Irban Wilayah I">
-                        <option value="Irban Wilayah II">
-                        <option value="Irban Wilayah III">
-                        <option value="Irban Khusus / Investigasi">
-                    </datalist>
                     @error('unit_bidang')
                         <p class="mt-1 text-xs text-red-700">{{ $message }}</p>
                     @enderror

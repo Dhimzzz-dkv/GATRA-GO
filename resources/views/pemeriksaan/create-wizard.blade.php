@@ -363,10 +363,15 @@ function loadDraft() {
     if (draft) {
         try {
             const parsed = JSON.parse(draft);
-            if (confirm(`Draft terakhir ditemukan (${new Date(parsed.timestamp).toLocaleString('id-ID')}). Lanjutkan dari draft?`)) {
+            window.showAppConfirm(`Draft terakhir ditemukan (${new Date(parsed.timestamp).toLocaleString('id-ID')}). Lanjutkan dari draft?`, {
+                title: 'Lanjutkan draft tersimpan?',
+                variant: 'submit',
+                acceptLabel: 'Lanjutkan',
+            }).then((confirmed) => {
+                if (!confirmed) return;
                 populateFormFromDraft(parsed.data);
                 showStep(parsed.currentStep || 1);
-            }
+            });
         } catch (e) {
             console.error('Failed to load draft:', e);
         }

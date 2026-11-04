@@ -215,13 +215,17 @@ function addTimPemeriksa() {
 function removeTimPemeriksa(btn) {
     const container = document.getElementById('tim-pemeriksa-container');
     if (container.querySelectorAll('.tim-item').length <= 1) {
-        alert('Minimal harus ada 1 anggota tim pemeriksa.');
+        window.showAppNotice('Minimal harus ada 1 anggota tim pemeriksa.', { title: 'Susunan tim belum lengkap', variant: 'warning' });
         return;
     }
     
-    if (confirm('Hapus anggota tim ini?')) {
-        btn.closest('.tim-item').remove();
-    }
+    window.showAppConfirm('Hapus anggota tim ini?', {
+        title: 'Hapus anggota tim?',
+        variant: 'danger',
+        acceptLabel: 'Ya, Hapus',
+    }).then((confirmed) => {
+        if (confirmed) btn.closest('.tim-item')?.remove();
+    });
 }
 
 // Tampilkan 1 baris tim otomatis agar form tidak terasa kosong

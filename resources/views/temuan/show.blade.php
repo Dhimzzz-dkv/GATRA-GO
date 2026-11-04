@@ -514,8 +514,11 @@
 
                                 {{-- Tombol Hapus Rekomendasi jika belum ada tindak lanjut --}}
                                 @if($canDeleteRek)
-                                    <form method="POST" action="{{ route('temuan.rekomendasi.destroy', [$temuan, $rek]) }}"
-                                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus butir rekomendasi ini?');" class="inline">
+                                    <form method="POST" action="{{ route('temuan.rekomendasi.destroy', [$temuan, $rek]) }}" class="inline"
+                                          data-confirm-title="Hapus rekomendasi?"
+                                          data-confirm-message="Apakah Anda yakin ingin menghapus butir rekomendasi ini?"
+                                          data-confirm-variant="danger"
+                                          data-confirm-accept="Ya, Hapus">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="text-xs text-state-danger hover:text-red-800 hover:underline cursor-pointer">
@@ -580,8 +583,11 @@
                                                 );
                                             @endphp
                                             @if($canDeleteTl)
-                                                <form method="POST" action="{{ route('temuan.tindak-lanjut.destroy', [$temuan, $tl]) }}"
-                                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus tindak lanjut ini?');" class="inline">
+                                                <form method="POST" action="{{ route('temuan.tindak-lanjut.destroy', [$temuan, $tl]) }}" class="inline"
+                                                      data-confirm-title="Hapus tindak lanjut?"
+                                                      data-confirm-message="Apakah Anda yakin ingin menghapus tindak lanjut ini?"
+                                                      data-confirm-variant="danger"
+                                                      data-confirm-accept="Ya, Hapus">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="text-xs text-state-danger hover:underline cursor-pointer">
@@ -647,8 +653,11 @@
                                                             );
                                                         @endphp
                                                         @if($canDeleteTl)
-                                                            <form method="POST" action="{{ route('temuan.tindak-lanjut.destroy', [$temuan, $tl]) }}"
-                                                                  onsubmit="return confirm('Apakah Anda yakin ingin menghapus tindak lanjut ini?');" class="inline">
+                                                            <form method="POST" action="{{ route('temuan.tindak-lanjut.destroy', [$temuan, $tl]) }}" class="inline"
+                                                                  data-confirm-title="Hapus tindak lanjut?"
+                                                                  data-confirm-message="Apakah Anda yakin ingin menghapus tindak lanjut ini?"
+                                                                  data-confirm-variant="danger"
+                                                                  data-confirm-accept="Ya, Hapus">
                                                                 @csrf
                                                                 @method('DELETE')
                                                                 <button type="submit" class="text-xs text-state-danger hover:underline cursor-pointer">
@@ -785,8 +794,11 @@
                                     );
                                 @endphp
                                 @if($canDeleteTl)
-                                    <form method="POST" action="{{ route('temuan.tindak-lanjut.destroy', [$temuan, $tl]) }}"
-                                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus tindak lanjut ini?');" class="inline">
+                                    <form method="POST" action="{{ route('temuan.tindak-lanjut.destroy', [$temuan, $tl]) }}" class="inline"
+                                          data-confirm-title="Hapus tindak lanjut?"
+                                          data-confirm-message="Apakah Anda yakin ingin menghapus tindak lanjut ini?"
+                                          data-confirm-variant="danger"
+                                          data-confirm-accept="Ya, Hapus">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="text-xs text-state-danger hover:underline cursor-pointer">

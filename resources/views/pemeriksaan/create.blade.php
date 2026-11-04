@@ -1976,7 +1976,7 @@
                 if (currentStep === 2) {
                     const lhpValidation = validateLhpCards();
                     if (!lhpValidation.valid) {
-                        alert(lhpValidation.message);
+                        window.showAppNotice(lhpValidation.message, { title: 'Data LHP belum lengkap', variant: 'warning' });
                         lhpValidation.card.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         return;
                     }
@@ -2030,7 +2030,7 @@
                             event.preventDefault();
                             markStepIncompleteFrom(2);
                             showWizardStep(2);
-                            alert(lhpValidation.message);
+                            window.showAppNotice(lhpValidation.message, { title: 'Data LHP belum lengkap', variant: 'warning' });
                             lhpValidation.card.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             return;
                         }

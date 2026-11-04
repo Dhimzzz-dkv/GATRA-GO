@@ -96,14 +96,17 @@
                                 <p class="text-xs text-gray-500">{{ $pegawai->email ?? '' }}</p>
                             </td>
                             <td class="px-6 py-4 text-center">
-                                <form method="POST" action="{{ route('pegawai.toggle-status', $pegawai) }}" class="inline">
+                                <form method="POST" action="{{ route('pegawai.toggle-status', $pegawai) }}" class="inline"
+                                      data-confirm-title="Ubah status pegawai?"
+                                      data-confirm-message="{{ $pegawai->is_active
+                                          ? 'Nonaktifkan pegawai ' . $pegawai->nama . '? Pegawai ini tidak akan muncul pada pilihan anggota tim pemeriksa.'
+                                          : 'Aktifkan kembali pegawai ' . $pegawai->nama . '?' }}"
+                                      data-confirm-variant="warning"
+                                      data-confirm-accept="{{ $pegawai->is_active ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan' }}">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" title="Klik untuk mengubah status"
                                             data-loading-text="Mengubah..."
-                                            onclick="return confirm('{{ $pegawai->is_active
-                                                ? 'Nonaktifkan pegawai ' . addslashes($pegawai->nama) . '? Pegawai ini tidak akan muncul pada pilihan anggota tim pemeriksa.'
-                                                : 'Aktifkan kembali pegawai ' . addslashes($pegawai->nama) . '?' }}');"
                                             class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition {{ $pegawai->is_active ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-rose-100 text-rose-700 hover:bg-rose-200' }}">
                                         <span class="h-1.5 w-1.5 rounded-full {{ $pegawai->is_active ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
                                         {{ $pegawai->is_active ? 'Aktif' : 'Nonaktif' }}
@@ -125,8 +128,11 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
                                     </a>
-                                    <form method="POST" action="{{ route('pegawai.destroy', $pegawai) }}"
-                                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus data pegawai {{ $pegawai->nama }}?');" class="inline">
+                                    <form method="POST" action="{{ route('pegawai.destroy', $pegawai) }}" class="inline"
+                                          data-confirm-title="Hapus pegawai?"
+                                          data-confirm-message="{{ 'Apakah Anda yakin ingin menghapus data pegawai ' . $pegawai->nama . '?' }}"
+                                          data-confirm-variant="danger"
+                                          data-confirm-accept="Ya, Hapus">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" title="Hapus Pegawai"

@@ -80,7 +80,11 @@
                                             @method('PATCH')
                                             <button type="submit" class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50">{{ $tahunAnggaran->is_active ? 'Nonaktifkan' : 'Aktifkan' }}</button>
                                         </form>
-                                        <form method="POST" action="{{ route('tahun-anggaran.destroy', $tahunAnggaran) }}" onsubmit="return confirm('Hapus tahun anggaran {{ $tahunAnggaran->tahun }}?')">
+                                        <form method="POST" action="{{ route('tahun-anggaran.destroy', $tahunAnggaran) }}"
+                                              data-confirm-title="Hapus tahun anggaran?"
+                                              data-confirm-message="{{ 'Hapus tahun anggaran ' . $tahunAnggaran->tahun . '?' }}"
+                                              data-confirm-variant="danger"
+                                              data-confirm-accept="Ya, Hapus">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50">Hapus</button>

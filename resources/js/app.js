@@ -88,21 +88,86 @@ function initializeConfirmationDialog() {
             button: 'bg-amber-600 hover:bg-amber-700 focus-visible:ring-amber-500',
             label: 'Ya, Batalkan',
         },
+        danger: {
+            eyebrow: 'Konfirmasi Penghapusan',
+            icon: 'bg-rose-50 text-rose-700',
+            iconPath: 'M6 7h12m-10 0V5a1 1 0 011-1h4a1 1 0 011 1v2m2 0l-.8 12.1a2 2 0 01-2 1.9H9.8a2 2 0 01-2-1.9L7 7m3 4v6m4-6v6',
+            button: 'bg-rose-600 hover:bg-rose-700 focus-visible:ring-rose-500',
+            label: 'Ya, Hapus',
+        },
+        warning: {
+            eyebrow: 'Konfirmasi Perubahan',
+            icon: 'bg-amber-50 text-amber-700',
+            iconPath: 'M12 9v4m0 4h.01M10.3 3.9L1.8 18.1A2 2 0 003.5 21h17a2 2 0 001.7-2.9L13.7 3.9a2 2 0 00-3.4 0z',
+            button: 'bg-amber-600 hover:bg-amber-700 focus-visible:ring-amber-500',
+            label: 'Ya, Lanjutkan',
+        },
+        notice: {
+            eyebrow: 'Informasi GATRA-GO',
+            icon: 'bg-primary-50 text-primary-700',
+            iconPath: 'M12 16v-4m0-4h.01M22 12a10 10 0 11-20 0 10 10 0 0120 0z',
+            button: 'bg-primary-600 hover:bg-primary-700 focus-visible:ring-primary-500',
+            label: 'Mengerti',
+        },
     };
     const approvedForms = new WeakSet();
-    let activeForm = null;
-    let activeSubmitter = null;
+    let activeResolver = null;
     let previousFocus = null;
 
-    const closeDialog = () => {
+    const closeDialog = (confirmed = false) => {
+        const resolve = activeResolver;
+        activeResolver = null;
         dialog.classList.add('hidden');
         dialog.classList.remove('flex');
         dialog.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('overflow-hidden');
-        activeForm = null;
-        activeSubmitter = null;
+        cancelButton.classList.remove('hidden');
         previousFocus?.focus();
+        resolve?.(confirmed);
     };
+
+    const openDialog = ({
+        title: dialogTitle = 'Konfirmasi tindakan',
+        message: dialogMessage = '',
+        variant: variantName = 'notice',
+        acceptLabel: customAcceptLabel = '',
+        mode = 'confirm',
+    } = {}) => new Promise((resolve) => {
+        if (activeResolver) {
+            closeDialog(false);
+        }
+
+        activeResolver = resolve;
+        previousFocus = document.activeElement;
+        const variant = variants[variantName] || variants.notice;
+        title.textContent = dialogTitle;
+        message.textContent = dialogMessage;
+        eyebrow.textContent = variant.eyebrow;
+        icon.className = `flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${variant.icon}`;
+        icon.innerHTML = `<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="${variant.iconPath}"/></svg>`;
+        acceptButton.className = `inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${variant.button}`;
+        acceptLabel.textContent = customAcceptLabel || variant.label;
+        cancelButton.classList.toggle('hidden', mode === 'notice');
+
+        dialog.classList.remove('hidden');
+        dialog.classList.add('flex');
+        dialog.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('overflow-hidden');
+        (mode === 'notice' ? acceptButton : cancelButton).focus();
+    });
+
+    window.showAppConfirm = (dialogMessage, options = {}) => openDialog({
+        ...options,
+        message: dialogMessage,
+        mode: 'confirm',
+    });
+    window.showAppNotice = (dialogMessage, options = {}) => openDialog({
+        ...options,
+        message: dialogMessage,
+        variant: options.variant || 'notice',
+        acceptLabel: options.acceptLabel || 'Mengerti',
+        mode: 'notice',
+    });
 
     document.addEventListener('submit', (event) => {
         const form = event.target;
@@ -117,68 +182,49 @@ function initializeConfirmationDialog() {
         if (!confirmationMessage) return;
 
         event.preventDefault();
-        activeForm = form;
-        activeSubmitter = event.submitter instanceof HTMLElement ? event.submitter : null;
-        previousFocus = activeSubmitter || document.activeElement;
+        const submitter = event.submitter instanceof HTMLElement ? event.submitter : null;
 
-        const variant = variants[form.dataset.confirmVariant] || variants.approval;
-        title.textContent = form.dataset.confirmTitle || 'Konfirmasi tindakan';
-        message.textContent = confirmationMessage;
-        eyebrow.textContent = variant.eyebrow;
-        icon.className = `flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${variant.icon}`;
-        icon.innerHTML = `<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="${variant.iconPath}"/></svg>`;
-        acceptButton.className = `inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${variant.button}`;
-        acceptLabel.textContent = form.dataset.confirmAccept || variant.label;
+        window.showAppConfirm(confirmationMessage, {
+            title: form.dataset.confirmTitle || 'Konfirmasi tindakan',
+            variant: form.dataset.confirmVariant || 'approval',
+            acceptLabel: form.dataset.confirmAccept || '',
+        }).then((confirmed) => {
+            if (!confirmed) return;
 
-        dialog.classList.remove('hidden');
-        dialog.classList.add('flex');
-        dialog.setAttribute('aria-hidden', 'false');
-        document.body.classList.add('overflow-hidden');
-        cancelButton.focus();
+            approvedForms.add(form);
+            try {
+                if (submitter && form.contains(submitter) && !submitter.disabled) {
+                    form.requestSubmit(submitter);
+                } else {
+                    form.requestSubmit();
+                }
+            } finally {
+                approvedForms.delete(form);
+            }
+        });
     }, true);
 
-    const cancelConfirmation = () => {
-        if (activeForm) closeDialog();
-    };
-
-    cancelButton.addEventListener('click', cancelConfirmation);
-    closeButton.addEventListener('click', cancelConfirmation);
+    cancelButton.addEventListener('click', () => closeDialog(false));
+    closeButton.addEventListener('click', () => closeDialog(false));
     dialog.addEventListener('click', (event) => {
-        if (event.target === dialog) cancelConfirmation();
+        if (event.target === dialog) closeDialog(false);
     });
 
-    acceptButton.addEventListener('click', () => {
-        if (!activeForm) return;
-
-        const form = activeForm;
-        const submitter = activeSubmitter;
-        closeDialog();
-        approvedForms.add(form);
-
-        try {
-            if (submitter && form.contains(submitter) && !submitter.disabled) {
-                form.requestSubmit(submitter);
-            } else {
-                form.requestSubmit();
-            }
-        } finally {
-            approvedForms.delete(form);
-        }
-    });
+    acceptButton.addEventListener('click', () => closeDialog(true));
 
     document.addEventListener('keydown', (event) => {
         if (dialog.classList.contains('hidden')) return;
 
         if (event.key === 'Escape') {
             event.preventDefault();
-            cancelConfirmation();
+            closeDialog(false);
             return;
         }
 
         if (event.key !== 'Tab') return;
 
         const focusable = Array.from(dialog.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
-            .filter(element => !element.hasAttribute('hidden'));
+            .filter(element => !element.hasAttribute('hidden') && !element.classList.contains('hidden'));
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
 
@@ -194,13 +240,34 @@ function initializeConfirmationDialog() {
 
 initializeConfirmationDialog();
 
-let employeeSearchId = 0;
+let searchControlId = 0;
 
 function normalizeEmployeeLabel(value) {
     return value.trim().replace(/\s+/g, ' ').normalize('NFKC').toLocaleLowerCase('id-ID');
 }
 
-function createEmployeeSearchId(base) {
+function closeOpenSearchSuggestions(except = null) {
+    document.querySelectorAll('[data-search-suggestions-open="true"]').forEach(wrapper => {
+        if (wrapper === except) return;
+
+        const input = wrapper.querySelector('[role="combobox"]');
+        const listbox = wrapper.querySelector('[role="listbox"]');
+        listbox?.classList.add('hidden');
+        input?.setAttribute('aria-expanded', 'false');
+        input?.removeAttribute('aria-activedescendant');
+        delete wrapper.dataset.searchSuggestionsOpen;
+    });
+}
+
+document.addEventListener('pointerdown', event => {
+    const openWrapper = event.target instanceof Element
+        ? event.target.closest('[data-search-suggestions-open="true"]')
+        : null;
+
+    closeOpenSearchSuggestions(openWrapper);
+});
+
+function createSearchControlId(base) {
     let id = base;
     let suffix = 2;
 
@@ -221,22 +288,34 @@ function enhanceEmployeeSelect(select) {
     const labelText = select.getAttribute('aria-label')
         || existingLabels.map(label => label.textContent.trim()).filter(Boolean).join(' ')
         || 'Pegawai pemeriksa';
-    const inputId = createEmployeeSearchId(select.id
+    const inputId = createSearchControlId(select.id
         ? `${select.id}-search`
-        : `pegawai-pemeriksa-search-${++employeeSearchId}`);
-    const listId = createEmployeeSearchId(`${inputId}-suggestions`);
+        : `pegawai-pemeriksa-search-${++searchControlId}`);
+    const listId = createSearchControlId(`${inputId}-listbox`);
+    const wrapper = document.createElement('div');
     const input = document.createElement('input');
-    const datalist = document.createElement('datalist');
-    const optionsByLabel = new Map();
-    const renderedSuggestions = new Set();
+    const listbox = document.createElement('div');
+    const searchableEmployees = employeeOptions.map((option, index) => ({
+        value: option.value,
+        label: option.textContent.trim().replace(/\s+/g, ' '),
+        normalizedLabel: normalizeEmployeeLabel(option.textContent),
+        index,
+    }));
+    let visibleEmployees = [];
+    let activeIndex = -1;
+    let isUpdatingSearch = false;
 
+    wrapper.className = 'relative w-full';
     input.type = 'text';
     input.id = inputId;
-    input.className = select.className;
+    input.className = `${select.className} pr-9`;
     input.placeholder = 'Ketik nama atau jabatan pegawai...';
     input.autocomplete = 'off';
-    input.setAttribute('list', listId);
+    input.setAttribute('role', 'combobox');
+    input.setAttribute('aria-haspopup', 'listbox');
     input.setAttribute('aria-autocomplete', 'list');
+    input.setAttribute('aria-controls', listId);
+    input.setAttribute('aria-expanded', 'false');
     input.setAttribute('aria-label', `${labelText} — ketik untuk mencari`);
 
     if (select.required) {
@@ -253,29 +332,104 @@ function enhanceEmployeeSelect(select) {
         input.setAttribute('aria-describedby', describedBy);
     }
 
-    datalist.id = listId;
-
-    employeeOptions.forEach(option => {
-        const label = option.textContent.trim().replace(/\s+/g, ' ');
-        const normalizedLabel = normalizeEmployeeLabel(label);
-        const matchingOptions = optionsByLabel.get(normalizedLabel) || [];
-
-        matchingOptions.push({ value: option.value, label });
-        optionsByLabel.set(normalizedLabel, matchingOptions);
-
-        if (!renderedSuggestions.has(normalizedLabel)) {
-            const suggestion = document.createElement('option');
-            suggestion.value = label;
-            datalist.appendChild(suggestion);
-            renderedSuggestions.add(normalizedLabel);
-        }
-    });
+    listbox.id = listId;
+    listbox.setAttribute('role', 'listbox');
+    listbox.className = 'absolute left-0 right-0 top-full z-50 mt-1 hidden max-h-60 overflow-y-auto rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl';
+    const chevron = document.createElement('span');
+    chevron.className = 'pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500';
+    chevron.setAttribute('aria-hidden', 'true');
+    chevron.innerHTML = '<svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.22 7.47a.75.75 0 0 1 1.06 0L10 11.19l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.53a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/></svg>';
 
     const setSelectedEmployee = function(value) {
         if (select.value === value) return;
 
         select.value = value;
-        select.dispatchEvent(new Event('change', { bubbles: true }));
+        isUpdatingSearch = true;
+        try {
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+        } finally {
+            isUpdatingSearch = false;
+        }
+    };
+
+    const closeSuggestions = function() {
+        listbox.classList.add('hidden');
+        input.setAttribute('aria-expanded', 'false');
+        input.removeAttribute('aria-activedescendant');
+        delete wrapper.dataset.searchSuggestionsOpen;
+        activeIndex = -1;
+    };
+
+    const setActiveSuggestion = function(index) {
+        if (visibleEmployees.length === 0) return;
+
+        const suggestionButtons = Array.from(listbox.querySelectorAll('[role="option"]'));
+        activeIndex = Math.max(0, Math.min(index, visibleEmployees.length - 1));
+
+        suggestionButtons.forEach((button, buttonIndex) => {
+            button.setAttribute('aria-selected', String(buttonIndex === activeIndex));
+            button.classList.toggle('bg-primary-50', buttonIndex === activeIndex);
+            button.classList.toggle('font-semibold', buttonIndex === activeIndex);
+            button.classList.toggle('text-primary-800', buttonIndex === activeIndex);
+            button.classList.toggle('text-gray-800', buttonIndex !== activeIndex);
+        });
+
+        const activeButton = suggestionButtons[activeIndex];
+        if (activeButton) {
+            input.setAttribute('aria-activedescendant', activeButton.id);
+            activeButton.scrollIntoView({ block: 'nearest' });
+        }
+    };
+
+    const selectEmployee = function(employee) {
+        input.value = employee.label;
+        setSelectedEmployee(employee.value);
+        input.setCustomValidity('');
+        input.removeAttribute('aria-invalid');
+        closeSuggestions();
+    };
+
+    const renderSuggestions = function() {
+        const searchTerm = normalizeEmployeeLabel(input.value);
+        visibleEmployees = searchableEmployees.filter(employee =>
+            !searchTerm || employee.normalizedLabel.includes(searchTerm)
+        );
+        activeIndex = -1;
+        listbox.replaceChildren();
+
+        if (visibleEmployees.length === 0) {
+            const emptyMessage = document.createElement('p');
+            emptyMessage.className = 'px-3 py-2 text-xs text-gray-500';
+            emptyMessage.setAttribute('role', 'status');
+            emptyMessage.textContent = 'Tidak ada pegawai yang cocok dengan pencarian.';
+            listbox.appendChild(emptyMessage);
+            return;
+        }
+
+        visibleEmployees.forEach((employee, visibleIndex) => {
+            const suggestion = document.createElement('button');
+            suggestion.type = 'button';
+            suggestion.id = `${listId}-option-${employee.index}`;
+            suggestion.setAttribute('role', 'option');
+            suggestion.setAttribute('aria-selected', String(select.value === employee.value));
+            suggestion.className = `block w-full break-words rounded-lg px-3 py-2 text-left text-xs leading-5 transition focus:outline-none ${select.value === employee.value
+                ? 'bg-primary-50 font-semibold text-primary-800'
+                : 'text-gray-800 hover:bg-primary-50 hover:text-primary-800 focus:bg-primary-50'
+            }`;
+            suggestion.textContent = employee.label;
+            suggestion.addEventListener('mousedown', event => event.preventDefault());
+            suggestion.addEventListener('click', () => selectEmployee(employee));
+            suggestion.addEventListener('mouseenter', () => setActiveSuggestion(visibleIndex));
+            listbox.appendChild(suggestion);
+        });
+    };
+
+    const openSuggestions = function() {
+        closeOpenSearchSuggestions(wrapper);
+        renderSuggestions();
+        listbox.classList.remove('hidden');
+        input.setAttribute('aria-expanded', 'true');
+        wrapper.dataset.searchSuggestionsOpen = 'true';
     };
 
     const updateSearchValidity = function() {
@@ -288,7 +442,7 @@ function enhanceEmployeeSelect(select) {
             return;
         }
 
-        const matchingOptions = optionsByLabel.get(normalizedLabel) || [];
+        const matchingOptions = searchableEmployees.filter(employee => employee.normalizedLabel === normalizedLabel);
         if (matchingOptions.length === 1) {
             setSelectedEmployee(matchingOptions[0].value);
             input.setCustomValidity('');
@@ -310,15 +464,45 @@ function enhanceEmployeeSelect(select) {
         input.removeAttribute('aria-invalid');
     };
 
-    input.addEventListener('input', updateSearchValidity);
-    select.addEventListener('change', syncSearchFromSelect);
+    input.addEventListener('focus', openSuggestions);
+    input.addEventListener('click', openSuggestions);
+    input.addEventListener('input', () => {
+        updateSearchValidity();
+        openSuggestions();
+    });
+    input.addEventListener('keydown', event => {
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            if (listbox.classList.contains('hidden')) {
+                openSuggestions();
+            }
+            setActiveSuggestion(activeIndex < 0 ? 0 : activeIndex + 1);
+        } else if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            if (listbox.classList.contains('hidden')) {
+                openSuggestions();
+            }
+            setActiveSuggestion(activeIndex < 0 ? visibleEmployees.length - 1 : activeIndex - 1);
+        } else if (event.key === 'Enter' && !listbox.classList.contains('hidden') && activeIndex >= 0) {
+            event.preventDefault();
+            selectEmployee(visibleEmployees[activeIndex]);
+        } else if (event.key === 'Escape' && !listbox.classList.contains('hidden')) {
+            event.preventDefault();
+            closeSuggestions();
+        } else if (event.key === 'Tab') {
+            closeSuggestions();
+        }
+    });
+    select.addEventListener('change', () => {
+        if (!isUpdatingSearch) syncSearchFromSelect();
+    });
     select.form?.addEventListener('reset', function() {
         window.setTimeout(syncSearchFromSelect, 0);
     });
 
     syncSearchFromSelect();
-    select.insertAdjacentElement('beforebegin', input);
-    select.insertAdjacentElement('afterend', datalist);
+    select.insertAdjacentElement('beforebegin', wrapper);
+    wrapper.append(input, chevron, listbox);
     existingLabels.forEach(label => {
         label.htmlFor = inputId;
     });
@@ -339,6 +523,169 @@ function enhanceEmployeeSearchControls(root) {
     ];
 
     selects.forEach(enhanceEmployeeSelect);
+}
+
+function enhanceSuggestionInput(input) {
+    if (!(input instanceof HTMLInputElement) || input.dataset.searchSuggestionsEnhanced === 'true') return;
+
+    let suggestionValues = [];
+    try {
+        suggestionValues = JSON.parse(input.dataset.suggestions || '[]');
+    } catch {
+        return;
+    }
+    if (!Array.isArray(suggestionValues)) return;
+
+    const options = suggestionValues
+        .map((suggestion, index) => ({
+            value: typeof suggestion === 'string' ? suggestion.trim() : String(suggestion?.value || '').trim(),
+            label: typeof suggestion === 'string' ? '' : String(suggestion?.label || '').trim(),
+            index,
+        }))
+        .filter(option => option.value !== '');
+    if (options.length === 0) return;
+
+    const baseId = input.id || `search-input-${++searchControlId}`;
+    const listboxId = createSearchControlId(`${baseId}-suggestions`);
+    const wrapper = document.createElement('div');
+    const listbox = document.createElement('div');
+    const chevron = document.createElement('span');
+    let visibleOptions = [];
+    let activeIndex = -1;
+
+    wrapper.className = 'relative w-full';
+    input.classList.add('pr-9');
+    input.autocomplete = 'off';
+    input.setAttribute('role', 'combobox');
+    input.setAttribute('aria-haspopup', 'listbox');
+    input.setAttribute('aria-autocomplete', 'list');
+    input.setAttribute('aria-controls', listboxId);
+    input.setAttribute('aria-expanded', 'false');
+
+    listbox.id = listboxId;
+    listbox.setAttribute('role', 'listbox');
+    listbox.className = 'absolute left-0 right-0 top-full z-50 mt-1 hidden max-h-60 overflow-y-auto rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl';
+
+    chevron.className = 'pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500';
+    chevron.setAttribute('aria-hidden', 'true');
+    chevron.innerHTML = '<svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.22 7.47a.75.75 0 0 1 1.06 0L10 11.19l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.53a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/></svg>';
+
+    const closeSuggestions = function() {
+        listbox.classList.add('hidden');
+        input.setAttribute('aria-expanded', 'false');
+        input.removeAttribute('aria-activedescendant');
+        delete wrapper.dataset.searchSuggestionsOpen;
+        activeIndex = -1;
+    };
+
+    const setActiveSuggestion = function(index) {
+        if (visibleOptions.length === 0) return;
+
+        activeIndex = Math.max(0, Math.min(index, visibleOptions.length - 1));
+        const suggestionButtons = Array.from(listbox.querySelectorAll('[role="option"]'));
+        suggestionButtons.forEach((button, buttonIndex) => {
+            const isActive = buttonIndex === activeIndex;
+            button.setAttribute('aria-selected', String(isActive));
+            button.classList.toggle('bg-primary-50', isActive);
+            button.classList.toggle('font-semibold', isActive);
+            button.classList.toggle('text-primary-800', isActive);
+            button.classList.toggle('text-gray-800', !isActive);
+        });
+
+        const activeButton = suggestionButtons[activeIndex];
+        if (activeButton) {
+            input.setAttribute('aria-activedescendant', activeButton.id);
+            activeButton.scrollIntoView({ block: 'nearest' });
+        }
+    };
+
+    const renderSuggestions = function() {
+        const searchTerm = normalizeEmployeeLabel(input.value);
+        visibleOptions = options.filter(option =>
+            normalizeEmployeeLabel(`${option.value} ${option.label}`).includes(searchTerm)
+        );
+        activeIndex = -1;
+        listbox.replaceChildren();
+
+        if (visibleOptions.length === 0) {
+            const emptyMessage = document.createElement('p');
+            emptyMessage.className = 'px-3 py-2 text-xs text-gray-500';
+            emptyMessage.setAttribute('role', 'status');
+            emptyMessage.textContent = 'Tidak ada saran yang cocok. Anda tetap dapat mengisi nilai secara manual.';
+            listbox.appendChild(emptyMessage);
+            return;
+        }
+
+        visibleOptions.forEach((option, visibleIndex) => {
+            const suggestion = document.createElement('button');
+            suggestion.type = 'button';
+            suggestion.id = `${listboxId}-option-${option.index}`;
+            suggestion.setAttribute('role', 'option');
+            suggestion.setAttribute('aria-selected', 'false');
+            suggestion.className = 'block w-full break-words rounded-lg px-3 py-2 text-left text-xs leading-5 text-gray-800 transition hover:bg-primary-50 hover:text-primary-800 focus:bg-primary-50 focus:outline-none';
+            suggestion.textContent = option.value;
+            suggestion.addEventListener('mousedown', event => event.preventDefault());
+            suggestion.addEventListener('click', () => {
+                input.value = option.value;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                closeSuggestions();
+            });
+            suggestion.addEventListener('mouseenter', () => setActiveSuggestion(visibleIndex));
+            listbox.appendChild(suggestion);
+        });
+    };
+
+    const openSuggestions = function() {
+        closeOpenSearchSuggestions(wrapper);
+        renderSuggestions();
+        listbox.classList.remove('hidden');
+        input.setAttribute('aria-expanded', 'true');
+        wrapper.dataset.searchSuggestionsOpen = 'true';
+    };
+
+    input.addEventListener('focus', openSuggestions);
+    input.addEventListener('click', openSuggestions);
+    input.addEventListener('input', openSuggestions);
+    input.addEventListener('keydown', event => {
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            if (listbox.classList.contains('hidden')) openSuggestions();
+            setActiveSuggestion(activeIndex < 0 ? 0 : activeIndex + 1);
+        } else if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            if (listbox.classList.contains('hidden')) openSuggestions();
+            setActiveSuggestion(activeIndex < 0 ? visibleOptions.length - 1 : activeIndex - 1);
+        } else if (event.key === 'Enter' && !listbox.classList.contains('hidden') && activeIndex >= 0) {
+            event.preventDefault();
+            const activeOption = visibleOptions[activeIndex];
+            if (activeOption) {
+                input.value = activeOption.value;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                closeSuggestions();
+            }
+        } else if (event.key === 'Escape' && !listbox.classList.contains('hidden')) {
+            event.preventDefault();
+            closeSuggestions();
+        } else if (event.key === 'Tab') {
+            closeSuggestions();
+        }
+    });
+
+    input.insertAdjacentElement('beforebegin', wrapper);
+    wrapper.append(input, chevron, listbox);
+    input.dataset.searchSuggestionsEnhanced = 'true';
+}
+
+function enhanceSuggestionControls(root) {
+    if (!(root instanceof Element)) return;
+
+    const selector = 'input[data-suggestions]';
+    const inputs = [
+        ...(root.matches(selector) ? [root] : []),
+        ...root.querySelectorAll(selector),
+    ];
+
+    inputs.forEach(enhanceSuggestionInput);
 }
 
 function handleRoleChange(roleId, clearIncompatiblePegawai = false) {
@@ -1417,12 +1764,14 @@ function initializeModalAccessibility() {
 
             addAccessibleNames(document.body);
             enhanceEmployeeSearchControls(document.body);
+            enhanceSuggestionControls(document.body);
             new MutationObserver(function(records) {
                 records.forEach(function(record) {
                     record.addedNodes.forEach(function(node) {
                         if (node instanceof Element) {
                             addAccessibleNames(node);
                             enhanceEmployeeSearchControls(node);
+                            enhanceSuggestionControls(node);
                         }
                     });
                 });

@@ -118,14 +118,17 @@
                                         Aktif (Anda)
                                     </span>
                                 @else
-                                    <form method="POST" action="{{ route('user.toggle-status', $u) }}" class="inline">
+                                    <form method="POST" action="{{ route('user.toggle-status', $u) }}" class="inline"
+                                          data-confirm-title="Ubah status akun?"
+                                          data-confirm-message="{{ $u->is_active
+                                              ? 'Nonaktifkan akun ' . $u->name . '? Pengguna ini tidak akan dapat masuk ke sistem sampai diaktifkan kembali.'
+                                              : 'Aktifkan kembali akun ' . $u->name . '?' }}"
+                                          data-confirm-variant="warning"
+                                          data-confirm-accept="{{ $u->is_active ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan' }}">
                                         @csrf
                                         @method('PATCH')
                                         <button type="submit" title="Klik untuk mengubah status"
                                                 data-loading-text="Mengubah..."
-                                                onclick="return confirm('{{ $u->is_active
-                                                    ? 'Nonaktifkan akun ' . addslashes($u->name) . '? Pengguna ini tidak akan dapat masuk ke sistem sampai diaktifkan kembali.'
-                                                    : 'Aktifkan kembali akun ' . addslashes($u->name) . '?' }}');"
                                                 class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition {{ $u->is_active ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-rose-100 text-rose-700 hover:bg-rose-200' }}">
                                             <span class="h-1.5 w-1.5 rounded-full {{ $u->is_active ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
                                             {{ $u->is_active ? 'Aktif' : 'Nonaktif' }}
@@ -136,11 +139,14 @@
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     @if($u->activation_required && ! $u->activated_at)
-                                        <form method="POST" action="{{ route('user.send-activation', $u) }}" class="inline">
+                                        <form method="POST" action="{{ route('user.send-activation', $u) }}" class="inline"
+                                              data-confirm-title="Kirim ulang aktivasi?"
+                                              data-confirm-message="{{ 'Kirim ulang tautan aktivasi ke ' . $u->email . '?' }}"
+                                              data-confirm-variant="submit"
+                                              data-confirm-accept="Kirim Ulang">
                                             @csrf
                                             <button type="submit" title="Kirim ulang email aktivasi" aria-label="Kirim ulang email aktivasi kepada {{ $u->name }}"
                                                     data-loading-text="Mengirim..."
-                                                    onclick="return confirm('Kirim ulang tautan aktivasi ke {{ addslashes($u->email) }}?');"
                                                     class="rounded-lg px-2 py-1.5 text-xs font-medium text-primary-700 hover:bg-primary-50 transition">
                                                 Kirim Ulang Aktivasi
                                             </button>
@@ -153,8 +159,11 @@
                                         </svg>
                                     </a>
                                     @if($u->id !== auth()->id())
-                                        <form method="POST" action="{{ route('user.destroy', $u) }}"
-                                              onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun {{ $u->name }}?');" class="inline">
+                                        <form method="POST" action="{{ route('user.destroy', $u) }}" class="inline"
+                                              data-confirm-title="Hapus akun?"
+                                              data-confirm-message="{{ 'Apakah Anda yakin ingin menghapus akun ' . $u->name . '?' }}"
+                                              data-confirm-variant="danger"
+                                              data-confirm-accept="Ya, Hapus">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" title="Hapus Pengguna"

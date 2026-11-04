@@ -258,8 +258,11 @@
                                                 </svg>
                                             </a>
 
-                                            <form method="POST" action="{{ route('temuan.destroy', $t) }}"
-                                                  onsubmit="return confirm('Hapus temuan {{ addslashes(Str::limit($t->judul_temuan ?? 'ini', 40)) }}? Tindak lanjut dan rekomendasi yang terkait juga akan ikut terhapus.');" class="inline">
+                                            <form method="POST" action="{{ route('temuan.destroy', $t) }}" class="inline"
+                                                  data-confirm-title="Hapus temuan?"
+                                                  data-confirm-message="{{ 'Hapus temuan ' . Str::limit($t->judul_temuan ?? 'ini', 40) . '? Tindak lanjut dan rekomendasi yang terkait juga akan ikut terhapus.' }}"
+                                                  data-confirm-variant="danger"
+                                                  data-confirm-accept="Ya, Hapus">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" title="Hapus Temuan"

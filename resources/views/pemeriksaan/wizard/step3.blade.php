@@ -341,7 +341,7 @@ function saveTemuan(saveButton) {
     // Get temuan type
     const typeRadio = form.querySelector(`input[name="temuan_type_${lhpIndex}"]:checked`);
     if (!typeRadio) {
-        alert('Pilih jenis temuan terlebih dahulu!');
+        window.showAppNotice('Pilih jenis temuan terlebih dahulu!', { title: 'Jenis temuan belum dipilih', variant: 'warning' });
         return;
     }
     
@@ -355,7 +355,7 @@ function saveTemuan(saveButton) {
     
     // Validate required fields
     if (!nomorTemuan || !judulTemuan || !uraianTemuan || !rekomendasi) {
-        alert('Harap lengkapi semua field yang wajib diisi (Nomor, Judul, Uraian, dan Rekomendasi)!');
+        window.showAppNotice('Harap lengkapi semua field yang wajib diisi (Nomor, Judul, Uraian, dan Rekomendasi)!', { title: 'Data temuan belum lengkap', variant: 'warning' });
         return;
     }
     
@@ -377,12 +377,12 @@ function saveTemuan(saveButton) {
         const nilai = (nilaiInput?.value || '').replace(/\D/g, '');
         
         if (!jenisRadio) {
-            alert('Pilih Klasifikasi Penyelesaian (Internal / Eksternal)!');
+            window.showAppNotice('Pilih Klasifikasi Penyelesaian (Internal / Eksternal)!', { title: 'Klasifikasi belum dipilih', variant: 'warning' });
             return;
         }
         
         if (!nilai || parseInt(nilai, 10) <= 0) {
-            alert('Masukkan Nominal Nilai Kerugian lebih dari 0!');
+            window.showAppNotice('Masukkan Nominal Nilai Kerugian lebih dari 0!', { title: 'Nilai kerugian tidak valid', variant: 'warning' });
             return;
         }
         
@@ -489,8 +489,13 @@ function escapeAttr(str) {
     return escapeHtml(str).replace(/"/g, '&quot;');
 }
 
-function removeSavedTemuan(lhpIndex, temuanIndex, type) {
-    if (!confirm('Hapus temuan ini?')) return;
+async function removeSavedTemuan(lhpIndex, temuanIndex, type) {
+    const confirmed = await window.showAppConfirm('Hapus temuan ini?', {
+        title: 'Hapus temuan?',
+        variant: 'danger',
+        acceptLabel: 'Ya, Hapus',
+    });
+    if (!confirmed) return;
     
     const list = savedTemuans[lhpIndex];
     if (!list) return;

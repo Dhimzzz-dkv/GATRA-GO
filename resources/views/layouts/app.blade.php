@@ -56,14 +56,14 @@
     <div id="app-confirm-dialog" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="app-confirm-title" aria-describedby="app-confirm-message">
         <div class="w-full max-w-md overflow-hidden rounded-3xl border border-white/80 bg-white shadow-2xl shadow-slate-950/20">
             <div class="flex items-start gap-4 p-6 pb-5">
-                <div id="app-confirm-icon" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700" aria-hidden="true">
+                <div id="app-confirm-icon" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-700" aria-hidden="true">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 13l4 4L19 7"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 16v-4m0-4h.01M22 12a10 10 0 11-20 0 10 10 0 0120 0z"/>
                     </svg>
                 </div>
                 <div class="min-w-0 flex-1 pt-0.5">
-                    <p id="app-confirm-eyebrow" class="mb-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-emerald-700">Konfirmasi Persetujuan</p>
-                    <h2 id="app-confirm-title" class="text-lg font-bold leading-snug text-slate-900">Setujui pengajuan ini?</h2>
+                    <p id="app-confirm-eyebrow" class="mb-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-primary-700">Konfirmasi GATRA-GO</p>
+                    <h2 id="app-confirm-title" class="text-lg font-bold leading-snug text-slate-900">Konfirmasi tindakan</h2>
                     <p id="app-confirm-message" class="mt-2 text-sm leading-relaxed text-slate-600"></p>
                 </div>
                 <button type="button" id="app-confirm-close" class="-mr-2 -mt-2 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500" aria-label="Tutup konfirmasi">
@@ -74,9 +74,9 @@
                 <button type="button" id="app-confirm-cancel" class="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
                     Batal
                 </button>
-                <button type="button" id="app-confirm-accept" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    <span id="app-confirm-accept-label">Ya, Setujui</span>
+                <button type="button" id="app-confirm-accept" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16v-4m0-4h.01M22 12a10 10 0 11-20 0 10 10 0 0120 0z"/></svg>
+                    <span id="app-confirm-accept-label">Ya, Lanjutkan</span>
                 </button>
             </div>
         </div>
